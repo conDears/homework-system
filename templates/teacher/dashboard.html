@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h2>📋 我布置的作业</h2>
+    <a href="{{ url_for('create_assignment') }}" class="btn btn-primary btn-sm">+ 布置新作业</a>
+</div>
+
+{% if stats %}
+{% for item in stats %}
+<div class="card assignment-card">
+    <div class="title-row">
+        <h3>{{ item.assignment.title }}</h3>
+        {% if item.assignment.status == 'published' %}
+            <span class="badge badge-green">进行中</span>
+        {% elif item.assignment.status == 'closed' %}
+            <span class="badge badge-red">已关闭</span>
+        {% else %}
+            <span class="badge badge-yellow">草稿</span>
+        {% endif %}
+    </div>
+    <div class="meta">
+        <span>📅 {{ item.assignment.created_at.strftime('%m-%d %H:%M') }}</span>
+        {% if item.assignment.deadline %}
+        <span>⏰ 截止 {{ item.assignment.deadline.strftime('%m-%d %H:%M') }}</span>
+        {% endif %}
+        <span class="badge badge-blue">📝 {{ item.submission_count }} 人已交</span>
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('view_submissions', assignment_id=item.assignment.id) }}" class="btn btn-primary btn-sm btn-block">查看提交</a>
+        {% if item.assignment.status == 'published' %}
+        <form method="POST" action="{{ url_for('close_assignment', assignment_id=item.assignment.id) }}">
+            <button type="submit" class="btn btn-warning btn-sm btn-block" onclick="return confirm('确认关闭此作业？')">关闭作业</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card empty-state">
+    <div class="icon">📭</div>
+    <p>还没有布置过作业</p>
+    <a href="{{ url_for('create_assignment') }}" class="btn btn-primary mt-4">布置第一个作业</a>
+</div>
+{% endif %}
+{% endblock %}

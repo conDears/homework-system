@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <a href="{{ url_for('teacher_dashboard') }}" class="back-link">← 返回</a>
+    <h2 class="mt-2">{{ assignment.title }}</h2>
+    <p class="text-muted mt-2">{{ assignment.description }}</p>
+    <div class="mt-2">
+        <span class="badge badge-green">共 {{ submissions|length }} 份提交</span>
+    </div>
+</div>
+
+{% if submissions %}
+{% for sub in submissions %}
+<div class="card submission-card">
+    <div class="header">
+        <div>
+            <strong>👨‍🎓 {{ sub.student.username }}</strong>
+            <span class="text-muted">  {{ sub.submitted_at.strftime('%m-%d %H:%M') }}</span>
+        </div>
+        {% if sub.status == 'graded' %}
+            <span class="badge badge-green">✅ {{ sub.grade }}</span>
+        {% else %}
+            <span class="badge badge-yellow">待评分</span>
+        {% endif %}
+    </div>
+    <div class="content">{{ sub.content }}</div>
+
+    {% if sub.status != 'graded' %}
+    <form method="POST" action="{{ url_for('grade_submission', submission_id=sub.id) }}" class="grade-form">
+        <input type="text" name="grade" placeholder="输入评分或评语，如：90分" required>
+        <button type="submit" class="btn btn-success btn-sm">提交评分</button>
+    </form>
+    {% endif %}
+</div>
+{% endfor %}
+{% else %}
+<div class="card empty-state">
+    <div class="icon">📭</div>
+    <p>还没有学生提交作业</p>
+</div>
+{% endif %}
+{% endblock %}

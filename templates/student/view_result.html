@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <a href="{{ url_for('student_dashboard') }}" class="back-link">← 返回</a>
+    <h2 class="mt-2">{{ submission.assignment.title }}</h2>
+    <p class="text-muted mt-2">{{ submission.assignment.description }}</p>
+</div>
+
+<div class="card submission-card">
+    <h2>你的回答</h2>
+    <div class="content mt-2">{{ submission.content }}</div>
+    <p class="text-muted mt-2">提交时间: {{ submission.submitted_at.strftime('%m-%d %H:%M') }}</p>
+</div>
+
+<div class="card">
+    <h2>批改结果</h2>
+    {% if submission.status == 'graded' %}
+    <p class="mt-2"><strong>评分：</strong><span class="badge badge-green">{{ submission.grade }}</span></p>
+    {% else %}
+    <p class="mt-2 text-muted">老师尚未批改</p>
+    {% endif %}
+</div>
+{% endblock %}

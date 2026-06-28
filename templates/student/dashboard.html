@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>📋 我的作业</h2>
+
+{% if assignments %}
+{% for a in assignments %}
+<div class="card assignment-card">
+    <div class="title-row">
+        <h3>{{ a.title }}</h3>
+        {% if a.id in submitted_ids %}
+            <span class="badge badge-green">✅ 已提交</span>
+        {% else %}
+            <span class="badge badge-red">❌ 未提交</span>
+        {% endif %}
+    </div>
+    <div class="meta">
+        <span>📅 {{ a.created_at.strftime('%m-%d %H:%M') }}</span>
+        {% if a.deadline %}
+        <span>⏰ 截止 {{ a.deadline.strftime('%m-%d %H:%M') }}</span>
+        {% endif %}
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('submit_assignment', assignment_id=a.id) }}"
+           class="btn {{ 'btn-outline' if a.id in submitted_ids else 'btn-primary' }} btn-sm btn-block">
+            {{ '✏️ 查看/修改' if a.id in submitted_ids else '📝 提交作业' }}
+        </a>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card empty-state">
+    <div class="icon">🎉</div>
+    <p>当前没有待完成的作业</p>
+</div>
+{% endif %}
+{% endblock %}

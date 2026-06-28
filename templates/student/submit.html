@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <a href="{{ url_for('student_dashboard') }}" class="back-link">← 返回</a>
+    <h2 class="mt-2">{{ assignment.title }}</h2>
+    <p class="text-muted mt-2">{{ assignment.description }}</p>
+    {% if assignment.deadline %}
+    <p class="mt-2"><span class="badge badge-blue">⏰ 截止: {{ assignment.deadline.strftime('%m-%d %H:%M') }}</span></p>
+    {% endif %}
+</div>
+
+<div class="card">
+    {% if existing %}
+    <p class="badge badge-green mt-2">你已提交过，可以修改重新提交</p>
+    {% endif %}
+    <form method="POST" class="mt-4">
+        <div class="form-group">
+            <label style="display:flex;justify-content:space-between;align-items:center">
+                你的回答
+                <span id="voiceStatus" style="font-weight:normal;font-size:12px;color:#999"></span>
+            </label>
+            <div style="position:relative">
+                <textarea id="contentArea" name="content" rows="10" required placeholder="请在此输入你的作业内容，或点击右下角麦克风语音输入...">{{ existing.content if existing else '' }}</textarea>
+                <button type="button" id="voiceBtn" onclick="toggleVoice()" style="position:absolute;bottom:12px;right:12px;width:44px;height:44px;border-radius:50%;border:none;background:#4a90d9;color:white;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(74,144,217,0.3);display:flex;align-items:center;justify-content:center;transition:all 0.2s">🎤</button>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">{{ '更新提交' if existing else '提交作业' }}</button>
+    </form>
+</div>
+
+{% if existing and existing.status == 'graded' %}
+<div class="card">
+    <h2>📊 批改结果</h2>
+    <p class="mt-2"><strong>评分：</strong><span class="badge badge-green">{{ existing.grade }}</span></p>
+</div>
+{% endif %}
+
+<script>
+var recognition = null;
+var isListening = false;
+
+function toggleVoice() {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        alert('你的手机浏览器不支持语音输入，请用 Chrome 或 Safari');
+        return;
+    }
+
+    if (isListening) {
+        stopVoice();
+    } else {
+        startVoice();
+    }
+}
+
+function startVoice() {
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'zh-CN';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = function() {
+        isListening = true;
+        var btn = document.getElementById('voiceBtn');
+        btn.style.background = '#e74c3c';
+        btn.innerHTML = '⏹';
+        document.getElementById('voiceStatus').textContent = '正在聆听...';
+        document.getElementById('voiceStatus').style.color = '#e74c3c';
+    };
+
+    recognition.onresult = function(event) {
+        var finalTranscript = '';
+        var interimTranscript = '';
+        for (var i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+        var textarea = document.getElementById('contentArea');
+        if (finalTranscript) {
+            // 追加到已有内容后面
+            if (textarea.value && !textarea.value.endsWith('。') && !textarea.value.endsWith('，') && !textarea.value.endsWith('\n')) {
+                textarea.value += ' ';
+            }
+            textarea.value += finalTranscript;
+        }
+        if (interimTranscript) {
+            document.getElementById('voiceStatus').textContent = '正在聆听: ' + interimTranscript;
+        }
+    };
+
+    recognition.onerror = function(event) {
+        console.log('语音识别错误:', event.error);
+        if (event.error === 'not-allowed') {
+            alert('请允许麦克风权限');
+        }
+        stopVoice();
+    };
+
+    recognition.onend = function() {
+        if (isListening) {
+            // 自动重新启动，实现持续聆听
+            try { recognition.start(); } catch(e) {}
+        }
+    };
+
+    try { recognition.start(); } catch(e) {
+        console.log('start error:', e);
+    }
+}
+
+function stopVoice() {
+    isListening = false;
+    if (recognition) {
+        recognition.stop();
+    }
+    var btn = document.getElementById('voiceBtn');
+    btn.style.background = '#4a90d9';
+    btn.innerHTML = '🎤';
+    document.getElementById('voiceStatus').textContent = '';
+    document.getElementById('voiceStatus').style.color = '#999';
+}
+</script>
+{% endblock %}
